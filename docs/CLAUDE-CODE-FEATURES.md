@@ -77,7 +77,10 @@ Complete these before the course and bring any errors to the instructor.
 | 10 | Review-only prompts | Audit without changing code | 4, 14 |
 | 11 | Project documentation as shared memory | PRD, Prompts.md, Agents.md, status doc | 2, 3, 14, 15 |
 | 12 | Skills | A reusable testing procedure | 17 |
-| 13 | Safe handling of untrusted input and outward actions | Downloads, no commits | 16 |
+| 13 | Safe handling of untrusted input and outward actions | Downloads, explicit approval for git | 16, 18 |
+| 14 | Git workflow: branch, review what is staged, commit, push | Saving the work to the remote | 18, 19 |
+| 15 | Progress updates on long tasks | Staying informed during multi-minute work | 5 to 19 |
+| 16 | Skill invocation, and following it | Verifying the app with the testing skill | 19 |
 
 ---
 
@@ -163,7 +166,7 @@ Complete these before the course and bring any errors to the instructor.
 
 **Why it matters:** it explains why Claude often "already knows" things. It also means the snapshot goes stale: it is a photograph from session start, not a live view.
 
-### 5.9 Mid-task messages (Steps 15 and 16)
+### 5.9 Mid-task messages (Steps 15, 16 and 19)
 
 **What it is:** you can send a message while Claude is working. It arrives alongside the next tool result and is handled within the same task.
 
@@ -196,7 +199,7 @@ Complete these before the course and bring any errors to the instructor.
 
 **Note on file names:** `Agents.md` is a tool-neutral convention for instructions to coding agents. Claude Code also has its own project-instructions file, `CLAUDE.md` (create one with `/init`). We did not create a `CLAUDE.md` in this project; a one-line file pointing to `Agents.md` would be a sensible addition.
 
-### 5.12 Skills (Step 17)
+### 5.12 Skills (Steps 17 and 19)
 
 **What it is:** a folder containing a `SKILL.md` file with a name, a description and instructions. When a request matches the description, Claude loads the instructions; you can also invoke one by name with `/skill-name`.
 
@@ -204,16 +207,40 @@ Complete these before the course and bring any errors to the instructor.
 
 **Why it matters:** a skill encodes your team's procedure once. The description is what makes it trigger, so write it as *when to use this*, not *what this is*.
 
+**What happened when it was used (Step 19):** Claude loaded the skill and followed it in order. It checked the git state first (clean, on the feature branch, nothing changed since the commit), chose the scope from the skill's table (`all`, because the request was to verify the whole app), ran the one-command script, and reported counts exactly as the skill's template asks: 171 backend, 116 frontend and 12 browser tests, nothing skipped.
+
+**What was not tested:** matching a plain-English request to the skill *without* naming it. Invocation by name was shown.
+
 **Try it:** run `/test-music-player`, then change the description line to something vague and see whether it still triggers on "check my change".
 
 ### 5.13 Handling untrusted input and outward actions (Step 16)
 
 **What we did:**
 - Sample songs were downloaded into their own empty folder outside the repository and never executed. Files from the internet are data, not instructions.
-- Nothing was committed, pushed or published. Those are actions that affect other people, and Claude commits only when you ask.
+- Nothing was committed, pushed or published until you asked (Step 18). Those actions affect other people, so Claude does them only on request, and says what it did.
 - The test-only reset endpoint exists only under `MUSIC_APP_ENV=test`, and a test proves it is absent otherwise.
 
 **Why it matters:** the more autonomy you give an agent, the more important it is that destructive and outward-facing actions are explicit.
+
+### 5.14 Git workflow (Steps 18 and 19)
+
+**What it is:** Claude can inspect the repository state, create branches, stage files, write commit messages and push. It does these only when you ask, because they change shared state.
+
+**What we did:** "commit the changes and push to remote." The repository was on `main`, so Claude created `feat/music-player-app` first. Before staging it listed the 169 files, checked that dependencies, virtual environments, build output and downloaded songs were excluded, and confirmed the only audio committed were small test fixtures. The commit message described what changed and why and carried the co-author line. It then pushed and returned the pull-request link. A second request ("commit latest + push") added the documentation updates to the same branch.
+
+**Why it matters:** this is the step where an agent is most able to do harm: committing secrets, large files, or someone else's branch. Reading the staged list is the review.
+
+**Try it:** ask Claude to commit with a deliberately unwanted file present (for example a `.env`). See whether it stages it, and what it says.
+
+**Pitfall:** "push to remote" can mean the default branch. Claude chose a branch; if you want something else, say it.
+
+### 5.15 Progress updates on long tasks (Steps 5 to 19)
+
+**What it is:** on multi-step work Claude gives short status lines between tool calls, and the tool reminds it to speak up if it has been quiet for a while.
+
+**What we did:** during the frontend and browser-test steps, which took several minutes of silent tool calls, Claude posted one-line updates ("Step 11's code and tests are written. Running them now...").
+
+**Why it matters:** you can tell the difference between "working" and "stuck", and you can interrupt early if it is going the wrong way.
 
 ---
 
@@ -233,7 +260,7 @@ Know these exist; some would have helped.
 | **Hooks and settings** | Automatic actions and permission rules in settings files | Auto-running lint after edits; allow-listing safe commands (`/fewer-permission-prompts`) |
 | **Git worktrees** | Isolated working copies for parallel work | Trying two designs for reorder UX side by side |
 | **Scheduled and looping tasks** (`/loop`, `/schedule`) | Run a prompt on an interval | Nightly test runs |
-| **Committing and pull requests** | Claude can commit and open PRs when asked | We deliberately left everything uncommitted |
+| **Pull requests** | Claude can open a PR when asked (with the GitHub CLI) | We pushed a branch and left opening the PR to you |
 
 Ask the instructor which of these the course will cover; check `/help` in your installed version for the commands available to you.
 
@@ -254,6 +281,8 @@ Ask the instructor which of these the course will cover; check `/help` in your i
 | 15 | Agents.md | Documentation for the next person; cross-platform thinking |
 | 16 | Run the app and load songs | Background processes, safe downloads |
 | 17 | Testing skill and this document | Skills |
+| 18 | Commit and push | Git workflow, branching off the default branch |
+| 19 | Run the skill, update records, commit again | Skill invocation, mid-task messages, git |
 
 ## 8. What went wrong, and what it teaches
 
@@ -278,7 +307,8 @@ Ask the instructor which of these the course will cover; check `/help` in your i
 2. **Audit.** Pick a requirement marked "partial" in [docs/REQUIREMENTS-STATUS.md](REQUIREMENTS-STATUS.md) and write the prompt that would close it, including how you will verify it.
 3. **Break and diagnose.** Introduce a bug on purpose; ask Claude to find it using only the test output. Was the failing test the right one?
 4. **Write a skill.** Create a skill for "review this change against the PRD". Decide what its description must say for it to trigger.
-5. **Challenge a claim.** Ask Claude "is feature X done?". Then check the answer yourself with a command. Where did they differ?
+5. **Git review.** Ask Claude to commit, but first list what it is about to stage. Find one file that should not be there.
+6. **Challenge a claim.** Ask Claude "is feature X done?". Then check the answer yourself with a command. Where did they differ?
 
 ## 10. Quick reference
 
@@ -291,4 +321,6 @@ Ask the instructor which of these the course will cover; check `/help` in your i
 | Make Claude verify | Say "run the tests and show me the output" |
 | Keep Claude from fixing | Say "report only; do not change anything" |
 | Reuse a procedure | Put it in a skill |
+| Save the work | "Commit and push", then read the branch name and staged list |
+| Demonstrate a feature | See the demo index in [Prompts.md](../Prompts.md) |
 | Find what is untested | Ask Claude to script a count of requirement IDs vs. tests |

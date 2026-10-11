@@ -521,7 +521,72 @@ be given to trainees as prerequisites for the course as well as the course conte
 - **The skill's description is its trigger.** It is written as "use when asked to test, verify, check…", not as a summary of what it contains.
 - **The skill is data and a script, not magic.** Everything it does can be done by hand with the commands in Agents.md; the skill makes it consistent.
 - **The guide separates "used" from "available".** Teaching only what was exercised is honest; the list of unused features says where to go next.
-- **Not verified:** the skill was written and its script was run, but automatic triggering from a plain-English request was not tested.
+- **Verified in Step 19:** the skill was loaded through Claude Code's skill mechanism and followed end to end. Matching from a plain-English request alone, without naming the skill, was not tested.
+
+---
+
+### Step 18 — Commit and push ✅ Used
+
+**Goal:** Save the work to the remote repository safely.
+
+**Prompt**
+```text
+commit the changes and push to remote.
+```
+
+**Why it works:** Committing and pushing affect other people, so Claude only does them when asked, and the request is short because the tool already knows the repository.
+
+**Result:** one commit on a new branch, `feat/music-player-app`, pushed to `origin`. 169 files; GitHub returned the "open a pull request" link.
+
+**Things to notice**
+- **It branched instead of writing to `main`.** The repository was on the default branch, so Claude created a branch first and said why.
+- **It looked before it staged.** It listed what would be committed, checked for dependencies, virtual environments, build output and your downloaded songs (all excluded), and confirmed the only audio files were small test fixtures.
+- **The commit message explains what and why, and carries the co-author line.**
+- **Pushing is a different permission from committing.** Both were requested in the same sentence here; if you only want a local commit, say so.
+
+---
+
+### Step 19 — Demonstrate the skill, update the records, commit again ✅ Used
+
+**Prompts**
+```text
+please make sure prompts.md is updated with skill and anything else that i can demonstrate as a claude feature. include that in the claude code features.md as well.
+```
+```text
+then commit latest+ push.
+```
+
+**Result**
+- **The skill was run for real:** Claude loaded `test-music-player` and followed its own procedure: checked the git state (clean, on the feature branch), chose scope `all` because you asked to verify the whole app, ran the script, and reported. 171 backend, 116 frontend and 12 browser tests passed; nothing was skipped.
+- **Records updated:** a feature-demo index (below), Steps 18 and 19, and new sections in [docs/CLAUDE-CODE-FEATURES.md](docs/CLAUDE-CODE-FEATURES.md).
+- **Second commit pushed** to the same branch.
+
+**Things to notice**
+- **A skill is followed, not just read.** The loaded instructions steered the order of work (look at the diff first, then run, then report with real numbers).
+- **A message sent mid-task was handled within the task:** "then commit latest + push" arrived while the skill was running, and was done after the verification finished, so the commit includes the verified state.
+
+---
+
+## Claude Code feature demo index
+
+Short live demos for a trainer. Each takes a few minutes and uses this repository.
+
+| Feature | How to demonstrate | Where it happened |
+|---|---|---|
+| Plan before code | Ask for a PRD for a small feature, "do not implement yet" | Step 1 |
+| Interactive questions | Give a vague request and show the multiple-choice questions | Steps 1, 2 |
+| Review-only prompt | "Report only; do not change anything" on `docs/PRD.md` | Steps 4, 14 |
+| File tools | Ask for a one-line change and show the exact edit | all steps |
+| Shell tool and evidence | "Run the backend tests and show me the output" | Steps 5 to 13 |
+| Test-first loop | Ask for a new rule; watch the test fail, then pass | Step 6 |
+| Diagnose test vs code | Break a rule on purpose; ask which side is wrong | Steps 11, 13 |
+| Background tasks | Start the dev servers, keep working, then stop them | Steps 5.1, 16 |
+| Editor context | Select lines in an open file and say "explain this" | Steps 4, 5 |
+| Mid-task messages | Send a second request while a long task is running | Steps 15, 16, 19 |
+| Skills | Type `/test-music-player`, or ask to "verify the app" | Steps 17, 19 |
+| Documentation for agents | Open `Agents.md` and ask a fresh session to run the app from it | Step 15 |
+| Safe git workflow | "commit and push": show the branch, the staged list, the message | Step 18 |
+| Untrusted downloads | Download sample files and show they stay outside the repository | Step 16 |
 
 ---
 
@@ -533,7 +598,7 @@ be given to trainees as prerequisites for the course as well as the course conte
 | Close the five partial requirements: bitrate, per-file upload progress, Media Session in a real browser, multi-select add to playlist, cross-tab queue updates | Step 14 |
 | Add the missing tests: CORS, OpenAPI snapshot, malformed API responses, concurrent playlist adds, 10k-song performance | Step 14 |
 | Orphan-file script, Dockerfile, manual accessibility pass, Firefox and Safari runs | Step 14 |
-| Nothing is committed to git yet | Steps 2 to 17 |
+| Open a pull request from `feat/music-player-app` into `main` and merge | Step 18 |
 
 ---
 
